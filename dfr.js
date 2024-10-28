@@ -32,56 +32,59 @@ function dataDimensions(dataframe) {
 }
 
 function findTotal(dataset) {
-  // Check if the dataset is an array
-  if (!Array.isArray(dataset) || dataset.length === 0) {
-      return false; // Invalid dataset
+  // Check if the dataset is a valid 1D array
+  if (!Array.isArray(dataset) || dataset.length === 0 || Array.isArray(dataset[0])) {
+      return 0; // Return 0 for empty arrays or 2D arrays
   }
+  
   // Filter valid numbers from the dataset
   const validNumbers = dataset.filter(value => validNumber(value));
-  // Check if there are any valid numbers
-  if (validNumbers.length === 0) {
-      return false; // No valid numbers found
-  }
+  
   // Calculate the total of valid numbers
   const total = validNumbers.reduce((acc, value) => {
       return acc + (typeof value === 'string' ? parseFloat(value) : value);
   }, 0);
+  
   return total; // Return the total
 }
 
 function calculateMean(dataset) {
   // Check if the dataset is an array
   if (!Array.isArray(dataset) || dataset.length === 0) {
-      return false; // Invalid dataset
+      return 0; // Return 0 for invalid dataset
   }
   // Filter valid numbers from the dataset
   const validNumbers = dataset.filter(value => validNumber(value));
   // Check if there are any valid numbers
   if (validNumbers.length === 0) {
-      return false; // No valid numbers found
+      return 0; // Return 0 if no valid numbers found
   }
   // Calculate the mean average
   const sum = validNumbers.reduce((acc, value) => {
       return acc + (typeof value === 'string' ? parseFloat(value) : value);
-  }, 0);
+  }, 0);  
   return sum / validNumbers.length; // Return the mean
 }
 
 function calculateMedian(dataset) {
   // Check if the dataset is an array
   if (!Array.isArray(dataset) || dataset.length === 0) {
-      return false; // Invalid dataset
+      return 0; // Return 0 for invalid dataset
   }
+  
   // Filter valid numbers from the dataset
   const validNumbers = dataset.filter(value => validNumber(value))
                                .map(value => (typeof value === 'string' ? parseFloat(value) : value));
+  
   // Check if there are valid numbers
   if (validNumbers.length === 0) {
-      return false; // No valid numbers found
+      return 0; // Return 0 if no valid numbers found
   }
+  
   // Sort the valid numbers
   validNumbers.sort((a, b) => a - b);
   const mid = Math.floor(validNumbers.length / 2);
+  
   // Calculate the median
   if (validNumbers.length % 2 === 0) {
       // Even number of elements
@@ -91,7 +94,6 @@ function calculateMedian(dataset) {
       return validNumbers[mid];
   }
 }
-
 
 function convertToNumber(dataframe, col) {
   let count = 0;
@@ -111,46 +113,46 @@ function flatten(dataframe) {
   return [];
 }
 
-function loadCSV(filename, ignorerows = [], ignorecols = []) {
-  if (!fs.existsSync(filename)) {
-      return [[], -1, -1]; // File does not exist
-  }
 
-  const fileContent = fs.readFileSync(filename, 'utf-8');
-  const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line.length > 0); // Trim and filter empty lines
+function loadCSV(filename, ignoreRows = [], ignoreCols = []) {
+    // Check if the file exists
+    if (!fs.existsSync(filename)) {
+        return [[], -1, -1]; // Return if the file does not exist
+    }
 
-  if (lines.length === 0) {
-      return [[], 0, 0];
-  }
+    // Read the file content
+    const fileContent = fs.readFileSync(filename, 'utf-8');
+    const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line.length > 0); // Trim and filter empty lines
 
-  const headers = lines[0].split(','); // Split headers
-  const originalColCount = headers.length; // Total number of columns in the header
-  const filteredHeaders = headers.filter((_, index) => !ignorecols.includes(index)); // Filter out ignored columns
+    // Total number of columns
+    const originalColCount = lines[0].split(',').length;
 
-  const results = [];
-  let originalRowCount = 0;
+    const results = [];
+    let originalRowCount = 0;
 
-  lines.forEach((line, lineIndex) => {
-      if (lineIndex === 0 || ignorerows.includes(lineIndex)) {
-          // Skip header or ignored rows
-          return;
-      }
+    lines.forEach((line, lineIndex) => {
+        // Skip ignored rows
+        if (ignoreRows.includes(lineIndex)) {
+            return;
+        }
 
-      const columns = line.split(',');
+        const columns = line.split(',');
 
-      // Create a filtered row based on ignored columns
-      const filteredRow = columns.map((col, index) => {
-          return ignorecols.includes(index) ? null : col; // Ignore specified columns
-      }).filter(value => value !== null); // Remove ignored columns
+        // Create a filtered row based on ignored columns
+        const filteredRow = columns.map((col, index) => {
+            return ignoreCols.includes(index) ? null : col; // Ignore specified columns
+        }).filter(value => value !== null); // Remove ignored columns
 
-      // Only push the filtered row if it has valid data
-      if (filteredRow.length > 0) {
-          results.push(filteredRow);
-          originalRowCount++; // Increment only when a valid row is added
-      }
-  });
+        // Only push the filtered row if it has valid data
+        if (filteredRow.length > 0) {
+            results.push(filteredRow);
+            originalRowCount++; // Increment only when a valid row is added
+        }
+    });
+
+    // Return the results, original row count (including headers), and original column count
+    return [results, lines.length, originalColCount];
 }
-
 
 function createSlice(dataframe, colindex, colpattern, exportcols = []) {
   if (!Array.isArray(dataframe) || !Array.isArray(dataframe[0])) {
