@@ -5,7 +5,6 @@ function fileExists(filename) {
 }
 
 function validNumber(value) {
-  // Check if the value is a number type
   if (typeof value === 'number') {
       return !isNaN(value);
   }
@@ -100,7 +99,6 @@ function flatten(dataframe) {
   return [];
 }
 
-
 function loadCSV(filename, ignoreRows = [], ignoreCols = []) {
     if (!fs.existsSync(filename)) {
         return [[], -1, -1]; // Return if the file does not exist
@@ -133,22 +131,23 @@ function loadCSV(filename, ignoreRows = [], ignoreCols = []) {
 
 function createSlice(dataframe, colindex, colpattern, exportcols = []) {
   if (!Array.isArray(dataframe) || !Array.isArray(dataframe[0])) {
-    throw new Error('Invalid dataframe');
+      throw new Error('Invalid dataframe: The provided data is not a valid 2D array.');
+  }
+  // Validate the column index
+  if (colindex < 0 || colindex >= dataframe[0].length) {
+      throw new Error(`Invalid colindex: ${colindex}. It must be between 0 and ${dataframe[0].length - 1}.`);
   }
   // Filter rows based on colpattern
   const rows = dataframe.filter((row) => {
-    if (colindex >= row.length) {
-      throw new Error('colindex is out of range');
-    }
-    // Match the pattern
-    return colpattern === '*' || row[colindex] == colpattern;
+      // Match the pattern
+      return colpattern === '*' || row[colindex] === colpattern;
   });
   // Determine which columns to export
   const slicedData = rows.map(row => {
-    if (exportcols.length === 0) {
-      return row; // Return all columns if none specified
-    }
-    return exportcols.map(colIndex => row[colIndex]);
+      if (exportcols.length === 0) {
+          return row; // Return all columns if none specified
+      }
+      return exportcols.map(colIndex => row[colIndex]);
   });
   return slicedData;
 }
